@@ -7,6 +7,7 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
 import Anthropic from "@anthropic-ai/sdk";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -22,6 +23,24 @@ try {
   /* no .env file; rely on the environment */
 }
 
+// A placeholder left in .env counts as no key.
+if (/^sk-ant-\.\.\.$/.test(process.env.ANTHROPIC_API_KEY || "")) delete process.env.ANTHROPIC_API_KEY;
+
+// macOS Keychain fallback: `security add-generic-password -a "$USER" -s build-buddy-anthropic -w`
+if (!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_AUTH_TOKEN && process.platform === "darwin") {
+  try {
+    const key = execFileSync("security", ["find-generic-password", "-s", "build-buddy-anthropic", "-w"], {
+      stdio: ["ignore", "pipe", "ignore"],
+    }).toString().trim();
+    if (key) {
+      process.env.ANTHROPIC_API_KEY = key;
+      console.log("Using the API key from Keychain item build-buddy-anthropic");
+    }
+  } catch {
+    /* no Keychain item */
+  }
+}
+
 const PORT = Number(process.env.BUDDY_PORT || 4790);
 const MODEL = process.env.BUDDY_MODEL || "claude-opus-5-5";
 const EFFORT = process.env.BUDDY_EFFORT || "medium"; // low | medium | high
@@ -30,8 +49,9 @@ const MAX_HISTORY_TURNS = 12;
 
 if (!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_AUTH_TOKEN) {
   console.error(
-    "\nNo ANTHROPIC_API_KEY found. Put it in " + path.join(here, ".env") +
-    " as ANTHROPIC_API_KEY=sk-ant-... (the file is gitignored) or export it before starting.\n" +
+    "\nNo ANTHROPIC_API_KEY found. Either store it in Keychain:\n" +
+    '  security add-generic-password -a "$USER" -s build-buddy-anthropic -w\n' +
+    "or put it in " + path.join(here, ".env") + " as ANTHROPIC_API_KEY=sk-ant-... (gitignored).\n" +
     "The page will load, but every Ask will fail until a key is set.\n",
   );
 }

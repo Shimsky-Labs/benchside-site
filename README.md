@@ -8,9 +8,11 @@ The first project loaded is the **Tello Charging Dock**. Swap `project.json` for
 
 ```bash
 cd ~/Desktop/repos/build-buddy
-cp .env.example .env        # then put your key in it: ANTHROPIC_API_KEY=sk-ant-...
+security add-generic-password -a "$USER" -s build-buddy-anthropic -w   # paste your key at the hidden prompt
 npm start                   # http://localhost:4790
 ```
+
+The server reads the key from the Keychain item `build-buddy-anthropic`. Alternatively copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY=` there; `.env` wins when both exist.
 
 Open it in Chrome (push-to-talk uses Chrome's speech recognition; Safari and Firefox still work with typed questions). Allow camera access for localhost. An iPhone on the same Apple ID shows up as a camera (Continuity Camera) and makes a good bench cam.
 
