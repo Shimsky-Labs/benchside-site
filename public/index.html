@@ -44,12 +44,16 @@ header .spacer{flex:1}
 .stage .listening{position:absolute;left:12px;top:12px;display:flex;align-items:center;gap:8px;background:rgba(21,23,27,.8);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-family:var(--font-mono);font-size:12px}
 .stage .listening[hidden]{display:none}
 .stage .listening i{width:10px;height:10px;border-radius:50%;background:var(--bad);animation:pulse 1s infinite}
+.stage .speaking{position:absolute;right:12px;top:12px;background:rgba(21,23,27,.8);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-family:var(--font-mono);font-size:12px;cursor:pointer}
+.stage .speaking[hidden]{display:none}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .camctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 select,button,textarea{font:inherit;color:inherit}
 select{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;max-width:100%}
 .toggle{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;cursor:pointer;user-select:none}
 .toggle input{accent-color:var(--accent)}
+.iconbtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);display:grid;place-items:center;cursor:pointer;flex:none;font-size:13px}
+.iconbtn:hover{border-color:var(--muted)}
 
 /* side column */
 .side{display:grid;grid-template-rows:minmax(0,1fr) auto;min-height:0}
@@ -102,18 +106,21 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
     <div class="crop" id="cropBox"></div>
     <div class="flash" id="flash"></div>
     <div class="listening" id="listening" hidden><i></i><span id="heard">listening…</span></div>
+    <div class="speaking" id="speaking" hidden>🔊 speaking · click to stop</div>
     <div class="nocam" id="nocam"><div>Starting camera…<br><small>If nothing appears, allow camera access for localhost in the browser.</small></div></div>
   </div>
   <div class="camctl">
     <select id="camSel" aria-label="Camera"></select>
     <label class="toggle"><input type="checkbox" id="sendCrop" checked> also send zoomed center crop</label>
     <label class="toggle"><input type="checkbox" id="speak" checked> read answers aloud</label>
+    <select id="voiceSel" aria-label="Voice"></select>
+    <button type="button" id="voiceTest" class="iconbtn" title="Hear this voice" aria-label="Hear this voice">▶</button>
   </div>
 </section>
 
 <section class="side">
   <div class="log" id="log">
-    <p class="empty" id="empty"><b>Hold Space and ask anything.</b> Hold a part up to the camera, point at a joint, or just talk. Buddy knows the whole build and answers from what it sees right now.</p>
+    <p class="empty" id="empty"><b>Hold Space and ask anything.</b> Hold a part up to the camera, point at a joint, or just talk. Buddy knows the whole build and answers from what it sees right now.<br><br><small>First time here, Chrome asks once for camera and microphone. Click Allow.</small></p>
   </div>
 
   <div class="ask">
@@ -129,7 +136,7 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
       <button class="mic" id="mic" title="Hold to talk (or hold Space)" aria-label="Hold to talk">🎤</button>
       <button class="primary" id="ask">Ask</button>
     </div>
-    <div class="hint"><span>Hold <kbd>Space</kbd> to talk, release to send</span><span><kbd>Enter</kbd> sends</span></div>
+    <div class="hint"><span>Hold <kbd>Space</kbd> to talk, release to send</span><span>or click 🎤 to start and again to send</span><span><kbd>Enter</kbd> sends typed text</span></div>
   </div>
 </section>
 </div>
@@ -159,11 +166,25 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
     devs.forEach((d,i) => { const o = document.createElement('option'); o.value = d.deviceId; o.textContent = d.label || ('Camera ' + (i+1)); camSel.appendChild(o); });
     if (prev && [...camSel.options].some(o => o.value === prev)) camSel.value = prev;
   }
+  const PERM_HELP = 'Click the icon at the left of the address bar (camera or tune icon), set <b>Camera</b> and <b>Microphone</b> to Allow, then reload this page.';
   async function startCam(deviceId){
     if (stream) stream.getTracks().forEach(t => t.stop());
-    const constraints = { audio:false, video: { width:{ideal:1920}, height:{ideal:1080}, ...(deviceId ? {deviceId:{exact:deviceId}} : {facingMode:'environment'}) } };
+    const videoC = { width:{ideal:1920}, height:{ideal:1080}, ...(deviceId ? {deviceId:{exact:deviceId}} : {facingMode:'environment'}) };
+    const msg = $('nocam').firstElementChild;
+    $('nocam').hidden = false;
+    msg.innerHTML = 'Starting camera…';
+    // If Chrome is still showing its permission prompt after a moment, say so.
+    const pending = setTimeout(() => { msg.innerHTML = 'Chrome is asking for <b>camera and microphone</b> access.<br>Click <b>Allow</b> in the prompt at the top of the window.<br><small>Don\'t see it? ' + PERM_HELP + '</small>'; }, 2500);
     try {
-      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      // Ask for camera AND microphone in one prompt, so push-to-talk is already allowed.
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio:true, video:videoC });
+        stream.getAudioTracks().forEach(t => { t.stop(); stream.removeTrack(t); });
+      } catch (e1) {
+        if (e1.name === 'NotAllowedError') throw e1;
+        stream = await navigator.mediaDevices.getUserMedia({ audio:false, video:videoC }); // no mic on this machine
+      }
+      clearTimeout(pending);
       video.srcObject = stream;
       $('nocam').hidden = true;
       await listCams();
@@ -171,8 +192,11 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
       if (id) camSel.value = id;
       try { localStorage.setItem('bb-cam', camSel.value); } catch {}
     } catch (e) {
+      clearTimeout(pending);
       $('nocam').hidden = false;
-      $('nocam').firstElementChild.innerHTML = 'Camera not available: ' + e.message + '<br><small>Allow camera access for localhost, or pick another camera.</small>';
+      if (e.name === 'NotAllowedError') msg.innerHTML = '<b>Camera and microphone are blocked for this page.</b><br><small>' + PERM_HELP + '</small>';
+      else if (e.name === 'NotFoundError') msg.innerHTML = 'No camera found.<br><small>Plug one in, or bring an iPhone near the Mac for Continuity Camera, then pick it in the list below.</small>';
+      else msg.innerHTML = 'Camera not available: ' + e.message + '<br><small>Pick another camera below.</small>';
     }
   }
   camSel.onchange = () => startCam(camSel.value);
@@ -211,20 +235,39 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
   }
 
   // ---------- speech out ----------
+  // Voice preference: saved choice → Chrome's natural "Google US English" → an Enhanced/Premium Apple voice → Samantha.
+  const voiceSel = $('voiceSel');
   let voice = null;
+  function englishVoices(){ return speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang) && !/Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Junior|Organ|Ralph|Superstar|Trinoids|Whisper|Wobble|Zarvox|Grandma|Grandpa|Eddy|Flo|Reed|Rocko|Sandy|Shelley|Kathy|Fred/i.test(v.name)); }
   function pickVoice(){
-    const vs = speechSynthesis.getVoices();
-    voice = vs.find(v => /Samantha|Karen|Daniel|Google US English/i.test(v.name)) || vs.find(v => v.lang.startsWith('en')) || vs[0] || null;
+    const vs = englishVoices(); if (!vs.length) return;
+    let saved = null; try { saved = localStorage.getItem('bb-voice'); } catch {}
+    voice = vs.find(v => v.name === saved)
+      || vs.find(v => v.name === 'Google US English')
+      || vs.find(v => /Enhanced|Premium/i.test(v.name) && v.lang === 'en-US')
+      || vs.find(v => v.name === 'Samantha')
+      || vs[0];
+    voiceSel.innerHTML = '';
+    vs.forEach(v => { const o = document.createElement('option'); o.value = v.name; o.textContent = v.name.replace(/ \(English \((United States|United Kingdom)\)\)/, ' ($1)'); if (v === voice) o.selected = true; voiceSel.appendChild(o); });
   }
   if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+  voiceSel.onchange = () => { voice = englishVoices().find(v => v.name === voiceSel.value) || voice; try { localStorage.setItem('bb-voice', voiceSel.value); } catch {} };
+  $('voiceTest').onclick = () => { const was = $('speak').checked; $('speak').checked = true; say("That's the right part. The stripe goes toward the red wire."); $('speak').checked = was; };
   function say(text){
     if (!$('speak').checked || !('speechSynthesis' in window) || !text.trim()) return;
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    if (voice) u.voice = voice;
-    u.rate = 1.05;
-    speechSynthesis.speak(u);
+    // One utterance per sentence: Chrome stops remote voices after about 15 seconds of continuous speech.
+    const parts = text.replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+["')\]]*|[^.!?]+$/g) || [text];
+    $('speaking').hidden = false;
+    parts.forEach((p, i) => {
+      const u = new SpeechSynthesisUtterance(p.trim());
+      if (voice) u.voice = voice;
+      u.rate = 1.0; u.pitch = 1.0;
+      if (i === parts.length - 1) u.onend = u.onerror = () => { $('speaking').hidden = true; };
+      speechSynthesis.speak(u);
+    });
   }
+  $('speaking').onclick = () => { speechSynthesis.cancel(); $('speaking').hidden = true; };
 
   // ---------- ask ----------
   async function ask(question){
@@ -285,25 +328,44 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
 
   // ---------- speech in (push to talk) ----------
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  let rec = null, recActive = false, heardText = '';
-  if (!SR) { micBtn.hidden = true; $('listening').hidden = true; }
+  let rec = null, recActive = false, heardText = '', recError = null;
+  const MIC_HELP = {
+    'not-allowed': 'Microphone access is blocked. Click the camera/mic icon at the left of the address bar, allow Microphone for localhost, then reload.',
+    'service-not-allowed': 'Speech recognition is not allowed in this browser. Use Chrome.',
+    'audio-capture': 'No microphone found. Check System Settings › Sound › Input, or pick a mic there.',
+    'network': 'Chrome speech recognition needs an internet connection. Check the network and try again.',
+    'no-speech': 'I did not hear anything. Hold Space, wait for "listening…", then speak.',
+    'aborted': null,
+  };
+  function micNote(text){ const m = addMsg('Mic', 'buddy'); m.body.className = 'body err'; m.body.textContent = text; }
+  if (!SR) {
+    micBtn.hidden = true; $('listening').hidden = true;
+    micNote('This browser has no speech recognition, so push-to-talk is off. Open http://localhost:4790 in Chrome for voice, or type your questions here.');
+  }
   function startListening(){
     if (!SR || recActive || busy) return;
     rec = new SR(); rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = true;
-    heardText = ''; $('heard').textContent = 'listening…'; $('listening').hidden = false; micBtn.classList.add('on'); recActive = true;
+    heardText = ''; recError = null;
+    $('heard').textContent = 'listening…'; $('listening').hidden = false; micBtn.classList.add('on'); recActive = true;
     rec.onresult = (e) => { let t = ''; for (const r of e.results) t += r[0].transcript; heardText = t.trim(); $('heard').textContent = heardText || 'listening…'; };
-    rec.onerror = (e) => { $('heard').textContent = 'mic: ' + e.error; };
-    rec.onend = () => { if (recActive) { recActive = false; micBtn.classList.remove('on'); $('listening').hidden = true; if (heardText) ask(heardText); } };
-    try { rec.start(); } catch {}
+    rec.onerror = (e) => { recError = e.error; };
+    rec.onend = () => {
+      recActive = false; micBtn.classList.remove('on'); $('listening').hidden = true;
+      if (heardText) ask(heardText);
+      else if (recError && MIC_HELP[recError] !== null) micNote(MIC_HELP[recError] || ('Speech recognition error: ' + recError));
+    };
+    try { rec.start(); } catch (e) { recActive = false; micBtn.classList.remove('on'); $('listening').hidden = true; micNote('Could not start the microphone: ' + e.message); }
   }
-  function stopListening(){ if (!recActive) return; try { rec.stop(); } catch { recActive = false; micBtn.classList.remove('on'); $('listening').hidden = true; } }
-  micBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); startListening(); });
-  micBtn.addEventListener('pointerup', stopListening);
-  micBtn.addEventListener('pointerleave', stopListening);
+  function stopListening(){ if (!recActive) return; try { rec.stop(); } catch { rec.onend(); } }
+  // Mic button: click once to start, click again to send. Space: hold to talk, release to send.
+  micBtn.addEventListener('click', () => { recActive ? stopListening() : startListening(); });
   let spaceHeld = false;
   document.addEventListener('keydown', (e) => {
-    if (e.target === q || e.target.tagName === 'SELECT') return;
-    if (e.code === 'Space' && !e.repeat) { e.preventDefault(); spaceHeld = true; startListening(); }
+    if (e.code !== 'Space') return;
+    if (e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') return;
+    if (e.target === q && q.value.trim()) return;           // typing a sentence: let Space be a space
+    e.preventDefault();
+    if (!e.repeat) { spaceHeld = true; startListening(); }
   });
   document.addEventListener('keyup', (e) => { if (e.code === 'Space' && spaceHeld) { spaceHeld = false; e.preventDefault(); stopListening(); } });
 
