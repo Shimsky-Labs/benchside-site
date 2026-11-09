@@ -1,0 +1,16 @@
+{
+  "name": "build-buddy",
+  "version": "0.1.0",
+  "description": "Live camera building buddy: webcam + Claude vision + your project instructions",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.4.0"
+  },
+  "private": true
+}

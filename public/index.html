@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Build Buddy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: bench cam on the left, the step card + conversation on the right. Dark so the video reads; copper accent from the project. */
+:root{
+  --bg:#15171B; --panel:#1E2127; --panel-2:#262A31; --fg:#E9EBEE; --muted:#9AA2AD; --line:#333942;
+  --accent:#E08A4C; --accent-ink:#1B1C1E; --ok:#5CBF73; --warn:#E6B54A; --bad:#E25D5D;
+  --font-display:"Archivo Black","Arial Black",Impact,sans-serif;
+  --font-body:"Atkinson Hyperlegible","Segoe UI",system-ui,-apple-system,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.5}
+.app{height:100%;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,1fr);grid-template-rows:auto minmax(0,1fr);gap:0}
+@media (max-width:900px){.app{grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr);height:auto}}
+header{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-family:var(--font-display);font-weight:400;font-size:20px;margin:0;letter-spacing:.01em}
+header .proj{color:var(--muted);font-size:14px}
+header .spacer{flex:1}
+.pill{font-family:var(--font-mono);font-size:12px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.ok{border-color:var(--ok);color:var(--ok)}
+.pill.bad{border-color:var(--bad);color:var(--bad)}
+
+/* camera column */
+.cam{display:grid;grid-template-rows:minmax(0,1fr) auto;min-height:0;padding:16px;gap:10px;border-right:1px solid var(--line)}
+@media (max-width:900px){.cam{border-right:0;border-bottom:1px solid var(--line)}}
+.stage{position:relative;min-height:0;background:#000;border-radius:14px;overflow:hidden;border:1px solid var(--line);display:grid;place-items:center}
+.stage video{width:100%;height:100%;object-fit:contain;display:block;background:#000}
+.stage .crop{position:absolute;inset:25%;border:1.5px dashed rgba(224,138,76,.7);border-radius:8px;pointer-events:none}
+.stage .crop[hidden]{display:none}
+.stage .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
+.stage .flash.on{opacity:.55;transition:none}
+.stage .nocam{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:var(--muted)}
+.stage .nocam[hidden]{display:none}
+.stage .listening{position:absolute;left:12px;top:12px;display:flex;align-items:center;gap:8px;background:rgba(21,23,27,.8);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-family:var(--font-mono);font-size:12px}
+.stage .listening[hidden]{display:none}
+.stage .listening i{width:10px;height:10px;border-radius:50%;background:var(--bad);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.camctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,button,textarea{font:inherit;color:inherit}
+select{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;max-width:100%}
+.toggle{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;cursor:pointer;user-select:none}
+.toggle input{accent-color:var(--accent)}
+
+/* side column */
+.side{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0}
+.step{padding:14px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+.step .k{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.step .row{display:flex;align-items:center;gap:8px}
+.step h2{font-family:var(--font-display);font-weight:400;font-size:22px;margin:2px 0 6px;flex:1;line-height:1.15}
+.step p{margin:0;color:var(--muted);font-size:15px}
+.step details{margin-top:8px;font-size:14px}
+.step summary{cursor:pointer;color:var(--muted)}
+.step ul{margin:6px 0 0;padding-left:18px}
+.iconbtn{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);display:grid;place-items:center;cursor:pointer;flex:none}
+.iconbtn:hover{border-color:var(--muted)}
+.steplist{display:flex;gap:3px;margin-top:10px}
+.steplist button{flex:1;height:6px;border:0;border-radius:3px;background:var(--line);padding:0;cursor:pointer}
+.steplist button.done{background:#6a5240}
+.steplist button.cur{background:var(--accent)}
+
+.log{overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;min-height:0}
+.msg{display:grid;gap:6px;max-width:100%}
+.msg .who{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.msg.me .who{color:var(--accent)}
+.msg .body{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
+.msg.me .body{background:var(--panel-2)}
+.msg .body img{display:block;max-width:220px;border-radius:8px;margin-bottom:6px}
+.msg .body.err{border-color:var(--bad);color:#F4B4B4}
+.msg .meta{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.thinking{display:inline-block}
+.thinking::after{content:"";animation:dots 1.2s steps(4,end) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+
+.ask{padding:12px 16px 16px;border-top:1px solid var(--line);background:var(--panel);display:grid;gap:8px}
+.quick{display:flex;gap:6px;flex-wrap:wrap}
+.quick button{background:transparent;border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px;color:var(--muted);cursor:pointer}
+.quick button:hover{border-color:var(--accent);color:var(--fg)}
+.askrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:end}
+textarea{width:100%;min-height:44px;max-height:140px;resize:vertical;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.primary{background:var(--accent);color:var(--accent-ink);border:0;border-radius:12px;padding:0 18px;height:44px;font-weight:700;cursor:pointer}
+.primary:disabled{opacity:.5;cursor:default}
+.mic{height:44px;width:44px;border-radius:12px;border:1px solid var(--line);background:var(--panel-2);cursor:pointer;display:grid;place-items:center}
+.mic.on{border-color:var(--bad);background:#3a2222}
+.mic[hidden]{display:none}
+.hint{color:var(--muted);font-size:13px;display:flex;gap:14px;flex-wrap:wrap}
+kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <h1>Build Buddy</h1>
+  <span class="proj" id="projName">loading project…</span>
+  <span class="spacer"></span>
+  <span class="pill" id="modelPill">model</span>
+  <span class="pill" id="keyPill">key</span>
+</header>
+
+<section class="cam">
+  <div class="stage" id="stage">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="crop" id="cropBox"></div>
+    <div class="flash" id="flash"></div>
+    <div class="listening" id="listening" hidden><i></i><span id="heard">listening…</span></div>
+    <div class="nocam" id="nocam"><div>Starting camera…<br><small>If nothing appears, allow camera access for localhost in the browser.</small></div></div>
+  </div>
+  <div class="camctl">
+    <select id="camSel" aria-label="Camera"></select>
+    <label class="toggle"><input type="checkbox" id="sendCrop" checked> also send zoomed center crop</label>
+    <label class="toggle"><input type="checkbox" id="speak" checked> read answers aloud</label>
+  </div>
+</section>
+
+<section class="side">
+  <div class="step">
+    <span class="k" id="stepK">Step</span>
+    <div class="row">
+      <button class="iconbtn" id="prevStep" aria-label="Previous step">‹</button>
+      <h2 id="stepTitle">…</h2>
+      <button class="iconbtn" id="nextStep" aria-label="Next step">›</button>
+    </div>
+    <p id="stepCap"></p>
+    <details><summary>What right looks like</summary><ul id="stepChecks"></ul></details>
+    <div class="steplist" id="stepList"></div>
+  </div>
+
+  <div class="log" id="log"></div>
+
+  <div class="ask">
+    <div class="quick">
+      <button data-q="Is this the right part for this step?">Right part?</button>
+      <button data-q="Does this look right so far? Check it against the step.">Did I do it right?</button>
+      <button data-q="What exactly do I do next on this step?">What's next?</button>
+      <button data-q="Which way does this go? Check the orientation.">Which way?</button>
+      <button data-q="What am I looking at? Name everything you can see on the bench.">What's on the bench?</button>
+    </div>
+    <div class="askrow">
+      <textarea id="q" placeholder="Ask about what's in front of the camera…" rows="1"></textarea>
+      <button class="mic" id="mic" title="Hold to talk (or hold Space)" aria-label="Hold to talk">🎤</button>
+      <button class="primary" id="ask">Ask</button>
+    </div>
+    <div class="hint"><span>Hold <kbd>Space</kbd> to talk, release to send</span><span><kbd>Enter</kbd> sends</span><span><kbd>←</kbd> <kbd>→</kbd> change step</span></div>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+  const video = $('video'), camSel = $('camSel'), log = $('log'), q = $('q'), askBtn = $('ask'), micBtn = $('mic');
+  let project = null, cur = 0, stream = null, busy = false, ctl = null;
+  const history = []; // {role, content} text only
+
+  // ---------- project / steps ----------
+  async function loadProject(){
+    project = await (await fetch('/project.json')).json();
+    $('projName').textContent = project.name + ' · ' + project.steps.length + ' steps';
+    try { cur = Math.min(project.steps.length-1, Math.max(0, Number(localStorage.getItem('bb-step-'+project.name)) || 0)); } catch {}
+    const list = $('stepList'); list.innerHTML = '';
+    project.steps.forEach((s,i) => { const b = document.createElement('button'); b.title = 'Step '+s.n+': '+s.title; b.onclick = () => setStep(i); list.appendChild(b); });
+    setStep(cur);
+    const cfg = await (await fetch('/config.json')).json().catch(() => ({}));
+    $('modelPill').textContent = (cfg.model || 'model') + ' · ' + (cfg.effort || '');
+    $('keyPill').textContent = cfg.hasKey ? 'key ok' : 'no API key';
+    $('keyPill').className = 'pill ' + (cfg.hasKey ? 'ok' : 'bad');
+  }
+  function setStep(i){
+    cur = Math.max(0, Math.min(project.steps.length-1, i));
+    const s = project.steps[cur];
+    $('stepK').textContent = 'Step ' + s.n + ' of ' + project.steps.length;
+    $('stepTitle').textContent = s.title;
+    $('stepCap').textContent = s.caption;
+    const ul = $('stepChecks'); ul.innerHTML = '';
+    (s.checks || []).forEach(c => { const li = document.createElement('li'); li.textContent = c; ul.appendChild(li); });
+    [...$('stepList').children].forEach((b,k) => { b.className = k < cur ? 'done' : (k === cur ? 'cur' : ''); });
+    try { localStorage.setItem('bb-step-'+project.name, String(cur)); } catch {}
+  }
+  $('prevStep').onclick = () => setStep(cur-1);
+  $('nextStep').onclick = () => setStep(cur+1);
+
+  // ---------- camera ----------
+  async function listCams(){
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+    const prev = camSel.value;
+    camSel.innerHTML = '';
+    devs.forEach((d,i) => { const o = document.createElement('option'); o.value = d.deviceId; o.textContent = d.label || ('Camera ' + (i+1)); camSel.appendChild(o); });
+    if (prev && [...camSel.options].some(o => o.value === prev)) camSel.value = prev;
+  }
+  async function startCam(deviceId){
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    const constraints = { audio:false, video: { width:{ideal:1920}, height:{ideal:1080}, ...(deviceId ? {deviceId:{exact:deviceId}} : {facingMode:'environment'}) } };
+    try {
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      video.srcObject = stream;
+      $('nocam').hidden = true;
+      await listCams();
+      const id = stream.getVideoTracks()[0].getSettings().deviceId;
+      if (id) camSel.value = id;
+      try { localStorage.setItem('bb-cam', camSel.value); } catch {}
+    } catch (e) {
+      $('nocam').hidden = false;
+      $('nocam').firstElementChild.innerHTML = 'Camera not available: ' + e.message + '<br><small>Allow camera access for localhost, or pick another camera.</small>';
+    }
+  }
+  camSel.onchange = () => startCam(camSel.value);
+  navigator.mediaDevices.addEventListener?.('devicechange', listCams);
+  $('sendCrop').onchange = () => { $('cropBox').hidden = !$('sendCrop').checked; };
+
+  function grabFrames(){
+    const w = video.videoWidth, h = video.videoHeight;
+    if (!w || !h) return [];
+    const out = [];
+    const full = document.createElement('canvas');
+    const scale = Math.min(1, 1280 / w);
+    full.width = Math.round(w*scale); full.height = Math.round(h*scale);
+    full.getContext('2d').drawImage(video, 0, 0, full.width, full.height);
+    out.push(full.toDataURL('image/jpeg', 0.85));
+    if ($('sendCrop').checked) {
+      const c = document.createElement('canvas');
+      const cw = Math.round(w/2), ch = Math.round(h/2);
+      const cs = Math.min(1, 1024 / cw);
+      c.width = Math.round(cw*cs); c.height = Math.round(ch*cs);
+      c.getContext('2d').drawImage(video, Math.round(w/4), Math.round(h/4), cw, ch, 0, 0, c.width, c.height);
+      out.push(c.toDataURL('image/jpeg', 0.85));
+    }
+    const f = $('flash'); f.classList.add('on'); requestAnimationFrame(() => setTimeout(() => f.classList.remove('on'), 60));
+    return out;
+  }
+
+  // ---------- log ----------
+  function addMsg(who, cls){
+    const m = document.createElement('div'); m.className = 'msg ' + cls;
+    const w = document.createElement('div'); w.className = 'who'; w.textContent = who;
+    const b = document.createElement('div'); b.className = 'body';
+    m.appendChild(w); m.appendChild(b); log.appendChild(m);
+    log.scrollTop = log.scrollHeight;
+    return { el:m, body:b };
+  }
+
+  // ---------- speech out ----------
+  let voice = null;
+  function pickVoice(){
+    const vs = speechSynthesis.getVoices();
+    voice = vs.find(v => /Samantha|Karen|Daniel|Google US English/i.test(v.name)) || vs.find(v => v.lang.startsWith('en')) || vs[0] || null;
+  }
+  if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+  function say(text){
+    if (!$('speak').checked || !('speechSynthesis' in window) || !text.trim()) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    if (voice) u.voice = voice;
+    u.rate = 1.05;
+    speechSynthesis.speak(u);
+  }
+
+  // ---------- ask ----------
+  async function ask(question){
+    if (busy) { ctl?.abort(); return; }
+    question = (question || q.value).trim() || 'Is what I\'m holding right for this step?';
+    q.value = '';
+    speechSynthesis?.cancel?.();
+    const images = grabFrames();
+    const me = addMsg('You · step ' + project.steps[cur].n, 'me');
+    if (images[0]) { const im = document.createElement('img'); im.src = images[0]; im.alt = 'camera frame'; me.body.appendChild(im); }
+    me.body.appendChild(document.createTextNode(question));
+    const reply = addMsg('Buddy', 'buddy');
+    reply.body.innerHTML = '<span class="thinking">Looking</span>';
+    busy = true; askBtn.textContent = 'Stop';
+    ctl = new AbortController();
+    let text = '';
+    try {
+      const res = await fetch('/ask', { method:'POST', headers:{'content-type':'application/json'}, signal: ctl.signal,
+        body: JSON.stringify({ question, stepIndex: cur, images, history }) });
+      if (!res.ok) throw new Error('server ' + res.status);
+      const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = '';
+      while (true) {
+        const { value, done } = await reader.read(); if (done) break;
+        buf += dec.decode(value, { stream:true });
+        let idx;
+        while ((idx = buf.indexOf('\n\n')) >= 0) {
+          const chunk = buf.slice(0, idx); buf = buf.slice(idx+2);
+          const ev = /^event: (.+)$/m.exec(chunk)?.[1]; const dataLine = /^data: (.+)$/m.exec(chunk)?.[1];
+          if (!ev || !dataLine) continue;
+          const data = JSON.parse(dataLine);
+          if (ev === 'text') { text += data.delta; reply.body.textContent = text; log.scrollTop = log.scrollHeight; }
+          else if (ev === 'error') { const e = document.createElement('div'); e.className = 'body err'; e.textContent = data.message; reply.el.appendChild(e); }
+          else if (ev === 'done') {
+            const meta = document.createElement('div'); meta.className = 'meta';
+            meta.textContent = `${data.model} · in ${data.usage.input} (+${data.usage.cache_read} cached) · out ${data.usage.output}`;
+            reply.el.appendChild(meta);
+          }
+        }
+      }
+      if (text) {
+        history.push({ role:'user', content:`[step ${project.steps[cur].n}] ${question}` }, { role:'assistant', content:text });
+        while (history.length > 16) history.shift();
+        say(text);
+      } else if (!reply.el.querySelector('.err')) {
+        reply.body.textContent = '(no answer)';
+      }
+    } catch (e) {
+      if (e.name === 'AbortError') { reply.body.textContent = text || '(stopped)'; }
+      else { reply.body.className = 'body err'; reply.body.textContent = e.message; }
+    } finally {
+      busy = false; askBtn.textContent = 'Ask'; ctl = null; log.scrollTop = log.scrollHeight;
+    }
+  }
+  askBtn.onclick = () => ask();
+  document.querySelectorAll('.quick button').forEach(b => b.onclick = () => ask(b.dataset.q));
+  q.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(); } });
+
+  // ---------- speech in (push to talk) ----------
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec = null, recActive = false, heardText = '';
+  if (!SR) { micBtn.hidden = true; $('listening').hidden = true; }
+  function startListening(){
+    if (!SR || recActive || busy) return;
+    rec = new SR(); rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = true;
+    heardText = ''; $('heard').textContent = 'listening…'; $('listening').hidden = false; micBtn.classList.add('on'); recActive = true;
+    rec.onresult = (e) => { let t = ''; for (const r of e.results) t += r[0].transcript; heardText = t.trim(); $('heard').textContent = heardText || 'listening…'; };
+    rec.onerror = (e) => { $('heard').textContent = 'mic: ' + e.error; };
+    rec.onend = () => { if (recActive) { recActive = false; micBtn.classList.remove('on'); $('listening').hidden = true; if (heardText) ask(heardText); } };
+    try { rec.start(); } catch {}
+  }
+  function stopListening(){ if (!recActive) return; try { rec.stop(); } catch { recActive = false; micBtn.classList.remove('on'); $('listening').hidden = true; } }
+  micBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); startListening(); });
+  micBtn.addEventListener('pointerup', stopListening);
+  micBtn.addEventListener('pointerleave', stopListening);
+  let spaceHeld = false;
+  document.addEventListener('keydown', (e) => {
+    if (e.target === q || e.target.tagName === 'SELECT') return;
+    if (e.code === 'Space' && !e.repeat) { e.preventDefault(); spaceHeld = true; startListening(); }
+    else if (e.key === 'ArrowLeft') setStep(cur-1);
+    else if (e.key === 'ArrowRight') setStep(cur+1);
+  });
+  document.addEventListener('keyup', (e) => { if (e.code === 'Space' && spaceHeld) { spaceHeld = false; e.preventDefault(); stopListening(); } });
+
+  // ---------- boot ----------
+  loadProject().then(() => {
+    let saved = null; try { saved = localStorage.getItem('bb-cam'); } catch {}
+    startCam(saved || undefined);
+  });
+})();
+</script>
+</body>
+</html>

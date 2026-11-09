@@ -1,0 +1,200 @@
+{
+  "name": "Tello Charging Dock",
+  "source": "https://claude.ai/artifact/7a25382a-334b-4de8-89bd-a5c5fe13f9be",
+  "summary": "A landing pad for a DJI Tello drone. Copper pads on the drone's four feet meet copper-lined cups in a wood block. A diode bridge on the drone makes polarity irrelevant, so the drone charges whichever way it lands. An MT3608 boost board set to 5.8 V feeds the cups through a 1 A polyfuse.",
+  "parts": [
+    {
+      "qty": "1×",
+      "name": "Copper foil tape",
+      "detail": "LOVIMAG, conductive adhesive. Used on the feet and in the cups.",
+      "identify": "A roll of shiny copper-colored foil with a paper backing. Thin, bends and tears easily, roughly 5 to 10 mm wide."
+    },
+    {
+      "qty": "4×",
+      "name": "B5819W Schottky diode",
+      "detail": "Chanzon, pack of 100. The four of them form the bridge.",
+      "identify": "Very small black surface-mount part (SOD-123 package), about 3.5 mm long, two flat metal ends, a single silver or white stripe near one end. The stripe marks the cathode. Easy to confuse with other SMD diodes in the pack; the pack label says B5819W or SS14."
+    },
+    {
+      "qty": "1×",
+      "name": "Right-angle micro-USB cable",
+      "detail": "BAIRONG. Supplies the plug that goes into the drone's side port and the four wires.",
+      "identify": "USB cable whose small end is a micro-USB plug bent 90 degrees. Inside the sheath: red (+), black (−), white and green (data, spares)."
+    },
+    {
+      "qty": "1×",
+      "name": "MT3608 boost board, USB-C",
+      "detail": "AKEYSRC, pack of 6. Powers the dock.",
+      "identify": "Small rectangular PCB (about 36 × 17 mm) with a USB-C socket on one end, a square black inductor, a tiny chip, and a small blue or white multi-turn trim pot with a brass screw. Pads labelled OUT+ and OUT−."
+    },
+    {
+      "qty": "1×",
+      "name": "1 A polyfuse RF16-100",
+      "detail": "Pack of 10. Cuts power on a short.",
+      "identify": "Yellow or orange flat disc with two thin wire legs, like a tiny yellow lentil. Resettable fuse, no polarity."
+    },
+    {
+      "qty": "1×",
+      "name": "Countersink drill bit",
+      "detail": "Or any 12 to 20 mm bit, drilled shallow.",
+      "identify": "Cone-shaped bit, usually with a point and fluted sides."
+    },
+    {
+      "qty": "1×",
+      "name": "Heat-shrink tubing",
+      "detail": "Electrical tape works too.",
+      "identify": "Short lengths of thin black plastic tube that shrink with heat."
+    },
+    {
+      "qty": "–",
+      "name": "Soldering iron, solder, multimeter, scissors",
+      "detail": "The multimeter is not optional: it sets the 5.8 V.",
+      "identify": ""
+    },
+    {
+      "qty": "–",
+      "name": "Scrap wood and a phone charger",
+      "detail": "Wood about 15 × 15 cm. Any USB charger and cable.",
+      "identify": ""
+    }
+  ],
+  "notNeeded": "The MTDELE USB-C breakout. The MT3608 board already has USB-C.",
+  "steps": [
+    {
+      "n": 1,
+      "title": "What you need",
+      "caption": "Five parts from your cart, a scrap of wood and a few tools. Any phone charger powers the dock.",
+      "checks": [
+        "All five bought parts present: copper tape, 4 diodes, micro-USB cable, MT3608 board, polyfuse.",
+        "Wood block about 15 × 15 cm, thick enough to drill 5 mm cups.",
+        "Tools: soldering iron, multimeter, drill with countersink or 12 to 20 mm bit, scissors, heat-shrink."
+      ]
+    },
+    {
+      "n": 2,
+      "title": "Cut the cable",
+      "caption": "Cut about 10 cm from the plug and keep the plug end. Strip the four wires: red is +, black is −, the other two are spares. Confirm red is + with the multimeter.",
+      "checks": [
+        "The piece kept is the micro-USB plug end with about 10 cm of cable.",
+        "Four wires exposed: red, black, white, green. Red and black stripped; white and green can be trimmed or taped off.",
+        "Multimeter in continuity or diode mode confirms red goes to the + pin of the micro-USB plug (pin 1, at the wide edge) and black to −."
+      ]
+    },
+    {
+      "n": 3,
+      "title": "Make the diode bridge",
+      "caption": "Solder four diodes into a diamond, with each stripe facing exactly as drawn. Red wire on top, black on the bottom, one feet wire on each side. Cover it with heat-shrink.",
+      "checks": [
+        "Four diodes form a diamond. Both stripes (cathodes) point toward the TOP node, which is the red (+) wire. Both unstriped ends (anodes) meet at the BOTTOM node, which is the black (−) wire.",
+        "Left node joins one diode's anode and another diode's cathode; same for the right node. Left node is feet pair A, right node is feet pair B.",
+        "Meter check in diode mode: from either side node to the top node reads about 0.2 to 0.4 V one way (Schottky drop), open the other way. Side to bottom node reads the same drop in the opposite direction.",
+        "Bridge wrapped in heat-shrink or tape so no diode leg can touch another."
+      ]
+    },
+    {
+      "n": 4,
+      "title": "Copper on every foot",
+      "caption": "Wrap a small piece of copper tape over the tip of a foot with its wire tucked underneath, then add a dab of solder. Do all four feet.",
+      "checks": [
+        "A stripped wire end sits UNDER the copper tape, on the foot tip, and a small solder blob bonds wire to tape.",
+        "Tape wraps the bottom of the foot, the surface that touches the ground.",
+        "All four feet done. Wires are thin enough not to lift the foot."
+      ]
+    },
+    {
+      "n": 5,
+      "title": "Wire the feet in pairs",
+      "caption": "Each diagonal pair of feet shares one side of the bridge. Tape the wires flat under the arms and keep the belly vents and sensors uncovered.",
+      "checks": [
+        "Front-left and rear-right feet both go to the bridge's LEFT node (pair A). Front-right and rear-left both go to the RIGHT node (pair B). Diagonals, never two feet on the same side.",
+        "Wires run along the underside of the arms, taped flat.",
+        "Nothing covers the belly: the downward vision sensors, the IR sensors and the vent slots stay clear."
+      ]
+    },
+    {
+      "n": 6,
+      "title": "Plug it in",
+      "caption": "Push the plug into the side port and leave it there. Tape the bridge and wires flat. The drone side is done.",
+      "checks": [
+        "Micro-USB plug fully seated in the Tello's side port and left in place.",
+        "Bridge taped flat against the body, not dangling near the props.",
+        "Drone still balances level on its four feet."
+      ]
+    },
+    {
+      "n": 7,
+      "title": "Mark the feet",
+      "caption": "Stand the drone on paper and mark where the four feet touch. Copy the marks onto the wood.",
+      "checks": [
+        "Four marks on the paper matching the drone's footprint (roughly a square).",
+        "Same four marks transferred to the top of the wood block, centered."
+      ]
+    },
+    {
+      "n": 8,
+      "title": "Drill four cups",
+      "caption": "At each mark, drill a shallow cone about 5 mm deep and 2 to 3 times wider than a foot. Drill a small hole through the middle for a wire.",
+      "checks": [
+        "Each cup is a shallow cone, about 5 mm deep, wide enough that a foot landing a few mm off still slides to the center.",
+        "A small through-hole (2 to 3 mm) at the bottom of each cup for the wire.",
+        "Four cups total, no splintering that would stop the foot from seating."
+      ]
+    },
+    {
+      "n": 9,
+      "title": "Line the cups with copper",
+      "caption": "Cut a square of tape, slit the edges and press it into the cup. Do all four. Keep the cups separate: no tape running between them.",
+      "checks": [
+        "Each cup's inner cone is covered in copper tape, pressed smooth, the through-hole left open.",
+        "No copper tape bridging between any two cups on the top surface. Each cup is electrically separate from the others."
+      ]
+    },
+    {
+      "n": 10,
+      "title": "Set the board to 5.8 V",
+      "caption": "Plug the charger into the board with nothing else connected. Hold the meter on OUT+ and OUT− and turn the small screw until it reads 5.8 V.",
+      "checks": [
+        "USB-C charger plugged into the MT3608 board, nothing on OUT+ / OUT−.",
+        "Multimeter on DC volts, red probe on OUT+, black on OUT−.",
+        "Trim-pot screw turned until the display reads 5.80 V (within about 0.05 V). Clockwise usually raises the voltage, but many turns may be needed on a multi-turn pot.",
+        "Never connect the drone before the board reads 5.8 V."
+      ]
+    },
+    {
+      "n": 11,
+      "title": "Wire under the block",
+      "caption": "Push a wire up each hole and solder it to the copper. Under the block, join the diagonal cups: one pair to OUT+ through the fuse, the other pair to OUT−.",
+      "checks": [
+        "A wire comes up through each of the four holes and is soldered to the copper inside the cup.",
+        "Underneath, two DIAGONAL cups are joined and go to OUT+ via the polyfuse in series. The other two diagonal cups are joined and go to OUT−.",
+        "The fuse is in the + leg between the board's OUT+ and the cups.",
+        "No wire on the underside shorts + to −."
+      ]
+    },
+    {
+      "n": 12,
+      "title": "Test by hand",
+      "caption": "Two neighboring cups should read 5.8 V. Set the drone in the cups and watch for its charging light. No light? Turn the drone off and try again.",
+      "checks": [
+        "Meter across any two NEIGHBORING cups reads about 5.8 V. Across two diagonal cups it reads 0 V.",
+        "Drone placed in the cups, powered off: its charging LED comes on within a few seconds.",
+        "If no light: check each foot's copper touches its cup, and re-check the diode bridge orientation."
+      ]
+    },
+    {
+      "n": 13,
+      "title": "Land and charge",
+      "caption": "When the drone lands, copper touches copper and the battery charges, the same as plugging in a cable.",
+      "checks": [
+        "Landing on the dock from flight seats all four feet in the cups.",
+        "Charging LED on after landing."
+      ]
+    }
+  ],
+  "safety": [
+    "The soldering iron tip is 300 °C or more. Rest it in its stand.",
+    "Set the board to 5.8 V before anything is connected to its output. Over-voltage can damage the Tello.",
+    "The polyfuse protects against a short between + and − cups, not against reversed voltage. The diode bridge handles polarity.",
+    "Keep copper tape, wires and solder blobs away from the propellers and the belly sensors."
+  ]
+}
