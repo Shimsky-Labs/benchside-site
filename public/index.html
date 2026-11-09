@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* Layout: bench cam on the left, the step card + conversation on the right. Dark so the video reads; copper accent from the project. */
+/* Layout: bench cam on the left, the conversation on the right. Dark so the video reads; copper accent from the project. */
 :root{
   --bg:#15171B; --panel:#1E2127; --panel-2:#262A31; --fg:#E9EBEE; --muted:#9AA2AD; --line:#333942;
   --accent:#E08A4C; --accent-ink:#1B1C1E; --ok:#5CBF73; --warn:#E6B54A; --bad:#E25D5D;
@@ -52,21 +52,9 @@ select{background:var(--panel-2);border:1px solid var(--line);border-radius:10px
 .toggle input{accent-color:var(--accent)}
 
 /* side column */
-.side{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0}
-.step{padding:14px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
-.step .k{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
-.step .row{display:flex;align-items:center;gap:8px}
-.step h2{font-family:var(--font-display);font-weight:400;font-size:22px;margin:2px 0 6px;flex:1;line-height:1.15}
-.step p{margin:0;color:var(--muted);font-size:15px}
-.step details{margin-top:8px;font-size:14px}
-.step summary{cursor:pointer;color:var(--muted)}
-.step ul{margin:6px 0 0;padding-left:18px}
-.iconbtn{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);display:grid;place-items:center;cursor:pointer;flex:none}
-.iconbtn:hover{border-color:var(--muted)}
-.steplist{display:flex;gap:3px;margin-top:10px}
-.steplist button{flex:1;height:6px;border:0;border-radius:3px;background:var(--line);padding:0;cursor:pointer}
-.steplist button.done{background:#6a5240}
-.steplist button.cur{background:var(--accent)}
+.side{display:grid;grid-template-rows:minmax(0,1fr) auto;min-height:0}
+.empty{color:var(--muted);font-size:15px;max-width:48ch}
+.empty b{color:var(--fg)}
 
 .log{overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;min-height:0}
 .msg{display:grid;gap:6px;max-width:100%}
@@ -124,26 +112,16 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
 </section>
 
 <section class="side">
-  <div class="step">
-    <span class="k" id="stepK">Step</span>
-    <div class="row">
-      <button class="iconbtn" id="prevStep" aria-label="Previous step">‹</button>
-      <h2 id="stepTitle">…</h2>
-      <button class="iconbtn" id="nextStep" aria-label="Next step">›</button>
-    </div>
-    <p id="stepCap"></p>
-    <details><summary>What right looks like</summary><ul id="stepChecks"></ul></details>
-    <div class="steplist" id="stepList"></div>
+  <div class="log" id="log">
+    <p class="empty" id="empty"><b>Hold Space and ask anything.</b> Hold a part up to the camera, point at a joint, or just talk. Buddy knows the whole build and answers from what it sees right now.</p>
   </div>
-
-  <div class="log" id="log"></div>
 
   <div class="ask">
     <div class="quick">
-      <button data-q="Is this the right part for this step?">Right part?</button>
-      <button data-q="Does this look right so far? Check it against the step.">Did I do it right?</button>
-      <button data-q="What exactly do I do next on this step?">What's next?</button>
+      <button data-q="What is this part I'm holding?">What's this?</button>
+      <button data-q="Is this right? Check what I've done here.">Is this right?</button>
       <button data-q="Which way does this go? Check the orientation.">Which way?</button>
+      <button data-q="Looking at where I am, what should I do next?">What's next?</button>
       <button data-q="What am I looking at? Name everything you can see on the bench.">What's on the bench?</button>
     </div>
     <div class="askrow">
@@ -151,7 +129,7 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
       <button class="mic" id="mic" title="Hold to talk (or hold Space)" aria-label="Hold to talk">🎤</button>
       <button class="primary" id="ask">Ask</button>
     </div>
-    <div class="hint"><span>Hold <kbd>Space</kbd> to talk, release to send</span><span><kbd>Enter</kbd> sends</span><span><kbd>←</kbd> <kbd>→</kbd> change step</span></div>
+    <div class="hint"><span>Hold <kbd>Space</kbd> to talk, release to send</span><span><kbd>Enter</kbd> sends</span></div>
   </div>
 </section>
 </div>
@@ -160,35 +138,18 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
 (function(){
   const $ = (id) => document.getElementById(id);
   const video = $('video'), camSel = $('camSel'), log = $('log'), q = $('q'), askBtn = $('ask'), micBtn = $('mic');
-  let project = null, cur = 0, stream = null, busy = false, ctl = null;
+  let project = null, stream = null, busy = false, ctl = null;
   const history = []; // {role, content} text only
 
-  // ---------- project / steps ----------
+  // ---------- project ----------
   async function loadProject(){
     project = await (await fetch('/project.json')).json();
-    $('projName').textContent = project.name + ' · ' + project.steps.length + ' steps';
-    try { cur = Math.min(project.steps.length-1, Math.max(0, Number(localStorage.getItem('bb-step-'+project.name)) || 0)); } catch {}
-    const list = $('stepList'); list.innerHTML = '';
-    project.steps.forEach((s,i) => { const b = document.createElement('button'); b.title = 'Step '+s.n+': '+s.title; b.onclick = () => setStep(i); list.appendChild(b); });
-    setStep(cur);
+    $('projName').textContent = project.name;
     const cfg = await (await fetch('/config.json')).json().catch(() => ({}));
     $('modelPill').textContent = (cfg.model || 'model') + ' · ' + (cfg.effort || '');
     $('keyPill').textContent = cfg.hasKey ? 'key ok' : 'no API key';
     $('keyPill').className = 'pill ' + (cfg.hasKey ? 'ok' : 'bad');
   }
-  function setStep(i){
-    cur = Math.max(0, Math.min(project.steps.length-1, i));
-    const s = project.steps[cur];
-    $('stepK').textContent = 'Step ' + s.n + ' of ' + project.steps.length;
-    $('stepTitle').textContent = s.title;
-    $('stepCap').textContent = s.caption;
-    const ul = $('stepChecks'); ul.innerHTML = '';
-    (s.checks || []).forEach(c => { const li = document.createElement('li'); li.textContent = c; ul.appendChild(li); });
-    [...$('stepList').children].forEach((b,k) => { b.className = k < cur ? 'done' : (k === cur ? 'cur' : ''); });
-    try { localStorage.setItem('bb-step-'+project.name, String(cur)); } catch {}
-  }
-  $('prevStep').onclick = () => setStep(cur-1);
-  $('nextStep').onclick = () => setStep(cur+1);
 
   // ---------- camera ----------
   async function listCams(){
@@ -268,11 +229,12 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
   // ---------- ask ----------
   async function ask(question){
     if (busy) { ctl?.abort(); return; }
-    question = (question || q.value).trim() || 'Is what I\'m holding right for this step?';
+    question = (question || q.value).trim() || 'What am I holding, and is it right for what I\'m doing?';
     q.value = '';
     speechSynthesis?.cancel?.();
+    $('empty')?.remove();
     const images = grabFrames();
-    const me = addMsg('You · step ' + project.steps[cur].n, 'me');
+    const me = addMsg('You', 'me');
     if (images[0]) { const im = document.createElement('img'); im.src = images[0]; im.alt = 'camera frame'; me.body.appendChild(im); }
     me.body.appendChild(document.createTextNode(question));
     const reply = addMsg('Buddy', 'buddy');
@@ -282,7 +244,7 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
     let text = '';
     try {
       const res = await fetch('/ask', { method:'POST', headers:{'content-type':'application/json'}, signal: ctl.signal,
-        body: JSON.stringify({ question, stepIndex: cur, images, history }) });
+        body: JSON.stringify({ question, images, history }) });
       if (!res.ok) throw new Error('server ' + res.status);
       const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = '';
       while (true) {
@@ -304,7 +266,7 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
         }
       }
       if (text) {
-        history.push({ role:'user', content:`[step ${project.steps[cur].n}] ${question}` }, { role:'assistant', content:text });
+        history.push({ role:'user', content:question }, { role:'assistant', content:text });
         while (history.length > 16) history.shift();
         say(text);
       } else if (!reply.el.querySelector('.err')) {
@@ -342,8 +304,6 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
   document.addEventListener('keydown', (e) => {
     if (e.target === q || e.target.tagName === 'SELECT') return;
     if (e.code === 'Space' && !e.repeat) { e.preventDefault(); spaceHeld = true; startListening(); }
-    else if (e.key === 'ArrowLeft') setStep(cur-1);
-    else if (e.key === 'ArrowRight') setStep(cur+1);
   });
   document.addEventListener('keyup', (e) => { if (e.code === 'Space' && spaceHeld) { spaceHeld = false; e.preventDefault(); stopListening(); } });
 

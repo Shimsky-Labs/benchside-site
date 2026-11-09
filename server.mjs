@@ -1,6 +1,6 @@
 // Build Buddy — local server.
 // Serves the camera page and proxies "ask" requests to Claude with the
-// current webcam frame, the project instructions and the step you're on.
+// current webcam frame, your question and the project knowledge as reference.
 // The API key never reaches the browser.
 
 import http from "node:http";
@@ -56,7 +56,9 @@ function systemPrompt(project) {
     "- If the frame is too blurry, dark, far away or the part is hidden, say exactly what to change: move closer, turn it over, show the stripe, hold it against a plain background.",
     "- When something looks wrong or risky, say so first and say how to fix it. Safety notes are below.",
     "- Never invent a detail you cannot see. If you are unsure between two parts, say which two and what would settle it.",
-    "- The person tells you which step they are on. Stay on that step unless they ask what comes next.",
+    "- There is no fixed order. The person asks whatever they want, whenever. Work out where they are in the build from what is on the bench and what they say; use the project knowledge below as reference, not as a script. Do not recite steps unless asked.",
+    "- If a question needs context you do not have (which part they mean, what they tried), ask one short question instead of guessing.",
+    "- Questions can also be about things not in the project knowledge (tools, soldering technique, the drone itself). Answer them the same way, from what you see and know.",
     "",
     "Project knowledge (JSON):",
     JSON.stringify(project, null, 1),
@@ -127,9 +129,7 @@ async function handleAsk(req, res) {
   }
 
   const project = loadProject();
-  const question = String(payload.question || "").trim() || "Is what I'm holding right for this step?";
-  const stepIndex = Number.isInteger(payload.stepIndex) ? payload.stepIndex : 0;
-  const step = project.steps[stepIndex] || project.steps[0];
+  const question = String(payload.question || "").trim() || "What am I holding, and is it right for what I'm doing?";
   const images = (payload.images || []).map(dataUrlToImageBlock).filter(Boolean).slice(0, 2);
 
   // Earlier turns, text only (images from past turns are not re-sent).
@@ -146,11 +146,7 @@ async function handleAsk(req, res) {
   });
   content.push({
     type: "text",
-    text:
-      `I'm on step ${step.n} of ${project.steps.length}: "${step.title}". ` +
-      `Step says: ${step.caption}\n\n` +
-      (images.length ? "" : "(No camera frame this time.)\n") +
-      `My question: ${question}`,
+    text: (images.length ? "" : "(No camera frame this time.)\n") + question,
   });
 
   const messages = [...priorTurns, { role: "user", content }];

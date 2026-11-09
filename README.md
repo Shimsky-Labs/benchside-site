@@ -1,8 +1,8 @@
 # Build Buddy
 
-A live camera helper for a physical build. Point a webcam at your bench, keep the page open, and when you are not sure, hold Space and ask: "is this the right part?", "which way does the stripe go?", "what's next?". The current frame, the project's full instructions and the step you are on go to Claude, and the answer streams back and is read aloud.
+A live camera helper for a physical build. Point a webcam at your bench, keep the page open, and whenever you are not sure, hold Space and ask anything: "what's this?", "which way does the stripe go?", "did I solder this right?", "what should I do next?". The current frame and your question go to Claude with the whole project as background knowledge, and the answer streams back and is read aloud. There is no step to select; Buddy works out where you are from what it sees.
 
-The first project loaded is the **Tello Charging Dock** (13 steps). Swap `project.json` for any other build.
+The first project loaded is the **Tello Charging Dock**. Swap `project.json` for any other build.
 
 ## Run
 
@@ -16,7 +16,6 @@ Open it in Chrome (push-to-talk uses Chrome's speech recognition; Safari and Fir
 
 ## Using it
 
-- **Pick the step** with the arrows next to the title or the `←` `→` keys. The "What right looks like" list is what Buddy checks against.
 - **Hold Space** (or the mic button) and talk, release to send. Or type and press Enter. The quick chips cover the common questions.
 - Every ask sends the full frame plus a zoomed crop of the center (the dashed box). Put the part inside the box for small things like the diodes. Untick "also send zoomed center crop" to send only the full frame.
 - "Read answers aloud" uses the Mac's speech voice. Untick it to read instead.
@@ -24,7 +23,7 @@ Open it in Chrome (push-to-talk uses Chrome's speech recognition; Safari and Fir
 
 ## How it works
 
-`server.mjs` is a dependency-free Node server. It serves `public/index.html`, and `POST /ask` takes the question, the step index, up to two JPEG frames and the last few text turns, then streams Claude's reply back as server-sent events. The project JSON is sent as a cached system prompt, so repeat asks mostly pay for the images and the answer.
+`server.mjs` is a dependency-free Node server. It serves `public/index.html`, and `POST /ask` takes the question, up to two JPEG frames and the last few text turns, then streams Claude's reply back as server-sent events. The project JSON is sent as a cached system prompt, so repeat asks mostly pay for the images and the answer.
 
 The browser never sees the API key. Only the server reads `.env`.
 
