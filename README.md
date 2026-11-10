@@ -19,8 +19,9 @@ Open it in Chrome (push-to-talk uses Chrome's speech recognition; Safari and Fir
 ## Using it
 
 - **Hold Space** (or the mic button) and talk, release to send. Or type and press Enter. The quick chips cover the common questions.
+- **Hands-free**: tick "hands-free: say Buddy" in the camera bar and leave the mic alone. Buddy listens the whole time but stays silent until you say its name ("Buddy, is this the right diode?"). For about eight seconds after an answer you can keep talking without the name, so follow-ups like "and the other one?" just work. Anything else you say at the bench is ignored. Saying "Buddy" while it is talking cuts it off. It pauses its own listening while it speaks, so it never answers itself.
 - Every ask sends the full frame plus a zoomed crop of the center (the dashed box). Put the part inside the box for small things like the diodes. Untick "also send zoomed center crop" to send only the full frame.
-- "Read answers aloud" uses the Mac's speech voice. Untick it to read instead.
+- "Read answers aloud" uses Chrome's natural voice by default; pick another in the dropdown and preview it with ▶. Untick it to read instead.
 - Ask again while an answer streams to stop it.
 
 ## How it works

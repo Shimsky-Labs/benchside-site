@@ -44,6 +44,8 @@ header .spacer{flex:1}
 .stage .listening{position:absolute;left:12px;top:12px;display:flex;align-items:center;gap:8px;background:rgba(21,23,27,.8);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-family:var(--font-mono);font-size:12px}
 .stage .listening[hidden]{display:none}
 .stage .listening i{width:10px;height:10px;border-radius:50%;background:var(--bad);animation:pulse 1s infinite}
+.stage .listening.idle{opacity:.7}
+.stage .listening.idle i{background:var(--muted);animation:none}
 .stage .speaking{position:absolute;right:12px;top:12px;background:rgba(21,23,27,.8);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-family:var(--font-mono);font-size:12px;cursor:pointer}
 .stage .speaking[hidden]{display:none}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
@@ -113,6 +115,7 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
     <select id="camSel" aria-label="Camera"></select>
     <label class="toggle"><input type="checkbox" id="sendCrop" checked> also send zoomed center crop</label>
     <label class="toggle"><input type="checkbox" id="speak" checked> read answers aloud</label>
+    <label class="toggle" title="Listen all the time; answer only when you say “Buddy”"><input type="checkbox" id="handsFree"> hands-free: say “Buddy…”</label>
     <select id="voiceSel" aria-label="Voice"></select>
     <button type="button" id="voiceTest" class="iconbtn" title="Hear this voice" aria-label="Hear this voice">▶</button>
   </div>
@@ -120,7 +123,7 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
 
 <section class="side">
   <div class="log" id="log">
-    <p class="empty" id="empty"><b>Hold Space and ask anything.</b> Hold a part up to the camera, point at a joint, or just talk. Buddy knows the whole build and answers from what it sees right now.<br><br><small>First time here, Chrome asks once for camera and microphone. Click Allow.</small></p>
+    <p class="empty" id="empty"><b>Hold Space and ask anything.</b> Hold a part up to the camera, point at a joint, or just talk. Buddy knows the whole build and answers from what it sees right now.<br><br>Or tick <b>hands-free</b> and say <b>“Buddy, is this the right diode?”</b> whenever you like. It stays quiet until you say its name.<br><br><small>First time here, Chrome asks once for camera and microphone. Click Allow.</small></p>
   </div>
 
   <div class="ask">
@@ -253,21 +256,30 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
   if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
   voiceSel.onchange = () => { voice = englishVoices().find(v => v.name === voiceSel.value) || voice; try { localStorage.setItem('bb-voice', voiceSel.value); } catch {} };
   $('voiceTest').onclick = () => { const was = $('speak').checked; $('speak').checked = true; say("That's the right part. The stripe goes toward the red wire."); $('speak').checked = was; };
+  // Resolves when the current read-aloud finishes (or at once when nothing is spoken).
+  let speechDone = Promise.resolve();
   function say(text){
-    if (!$('speak').checked || !('speechSynthesis' in window) || !text.trim()) return;
+    if (!$('speak').checked || !('speechSynthesis' in window) || !text.trim()) return speechDone;
     speechSynthesis.cancel();
+    hfPause();                                   // do not transcribe our own voice
     // One utterance per sentence: Chrome stops remote voices after about 15 seconds of continuous speech.
     const parts = text.replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+["')\]]*|[^.!?]+$/g) || [text];
     $('speaking').hidden = false;
-    parts.forEach((p, i) => {
-      const u = new SpeechSynthesisUtterance(p.trim());
-      if (voice) u.voice = voice;
-      u.rate = 1.0; u.pitch = 1.0;
-      if (i === parts.length - 1) u.onend = u.onerror = () => { $('speaking').hidden = true; };
-      speechSynthesis.speak(u);
+    speechDone = new Promise(resolve => {
+      const finish = () => { $('speaking').hidden = true; followUntil = Date.now() + FOLLOW_MS; hfResume(); resolve(); };
+      parts.forEach((p, i) => {
+        const u = new SpeechSynthesisUtterance(p.trim());
+        if (voice) u.voice = voice;
+        u.rate = 1.0; u.pitch = 1.0;
+        if (i === parts.length - 1) u.onend = u.onerror = finish;
+        speechSynthesis.speak(u);
+      });
+      // Safety net: if Chrome drops the utterance without an event, do not stay paused forever.
+      setTimeout(() => { if (!speechSynthesis.speaking) finish(); }, 2000 + parts.join(' ').length * 120);
     });
+    return speechDone;
   }
-  $('speaking').onclick = () => { speechSynthesis.cancel(); $('speaking').hidden = true; };
+  $('speaking').onclick = () => { speechSynthesis.cancel(); };
 
   // ---------- ask ----------
   async function ask(question){
@@ -344,6 +356,7 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
   }
   function startListening(){
     if (!SR || recActive || busy) return;
+    hfPause();
     rec = new SR(); rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = true;
     heardText = ''; recError = null;
     $('heard').textContent = 'listening…'; $('listening').hidden = false; micBtn.classList.add('on'); recActive = true;
@@ -351,10 +364,10 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
     rec.onerror = (e) => { recError = e.error; };
     rec.onend = () => {
       recActive = false; micBtn.classList.remove('on'); $('listening').hidden = true;
-      if (heardText) ask(heardText);
-      else if (recError && MIC_HELP[recError] !== null) micNote(MIC_HELP[recError] || ('Speech recognition error: ' + recError));
+      if (heardText) ask(heardText).then(() => speechDone).then(hfResume);
+      else { if (recError && MIC_HELP[recError] !== null) micNote(MIC_HELP[recError] || ('Speech recognition error: ' + recError)); hfResume(); }
     };
-    try { rec.start(); } catch (e) { recActive = false; micBtn.classList.remove('on'); $('listening').hidden = true; micNote('Could not start the microphone: ' + e.message); }
+    try { rec.start(); } catch (e) { recActive = false; micBtn.classList.remove('on'); $('listening').hidden = true; micNote('Could not start the microphone: ' + e.message); hfResume(); }
   }
   function stopListening(){ if (!recActive) return; try { rec.stop(); } catch { rec.onend(); } }
   // Mic button: click once to start, click again to send. Space: hold to talk, release to send.
@@ -369,10 +382,77 @@ kbd{font-family:var(--font-mono);font-size:12px;border:1px solid var(--line);bor
   });
   document.addEventListener('keyup', (e) => { if (e.code === 'Space' && spaceHeld) { spaceHeld = false; e.preventDefault(); stopListening(); } });
 
+  // ---------- hands-free (wake word) ----------
+  // Listens continuously but stays silent. Speaks only when addressed ("Buddy, …"), or when you
+  // keep talking within a few seconds after an answer (a follow-up). Everything else is ignored.
+  const hfBox = $('handsFree');
+  const WAKE = /\b(?:hey|ok|okay|hi|yo|so)?[,\s]*(?:buddy|buddie|buddi)\b[,.!?:]*\s*/i;
+  const FOLLOW_MS = 8000;        // after an answer, speech without the wake word still counts
+  const WAKE_WAIT_MS = 6000;     // "Buddy." alone: wait this long for the question
+  let hf = null, hfPaused = false, followUntil = 0, wakePending = 0;
+  function hfShow(text, idle){ const el = $('listening'); el.hidden = false; el.classList.toggle('idle', !!idle); $('heard').textContent = text; }
+  function hfHide(){ if (!recActive) { $('listening').hidden = true; $('listening').classList.remove('idle'); } }
+  function hfStart(){
+    if (!SR || !hfBox.checked || hf || hfPaused || recActive || busy) return;
+    const me = new SR(); hf = me;
+    me.lang = 'en-US'; me.interimResults = true; me.continuous = true;
+    let done = 0;
+    hfShow('say “Buddy…”', true);
+    me.onresult = (e) => {
+      for (let i = done; i < e.results.length; i++) {
+        const r = e.results[i], t = r[0].transcript.trim();
+        const addressed = WAKE.test(t) || wakePending > Date.now() || Date.now() < followUntil;
+        if (!r.isFinal) { if (addressed && t) hfShow(t, false); continue; }
+        done = i + 1;
+        hfHandle(t);
+      }
+    };
+    me.onerror = (e) => {
+      if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(e.error)) {
+        hfBox.checked = false; try { localStorage.setItem('bb-handsfree', '0'); } catch {}
+        micNote(MIC_HELP[e.error]); hfPaused = true;
+      }
+    };
+    me.onend = () => { if (hf === me) hf = null; hfHide(); if (hfBox.checked && !hfPaused) setTimeout(hfStart, 250); };
+    try { me.start(); } catch (e) { hf = null; micNote('Could not start hands-free listening: ' + e.message); }
+  }
+  function hfPause(){ if (!hfBox.checked) return; hfPaused = true; const cur = hf; hf = null; try { cur?.stop(); } catch {} hfHide(); }
+  function hfResume(){ if (!hfBox.checked) return; hfPaused = false; hfStart(); }
+  function hfHandle(t){
+    if (!t) return;
+    const m = WAKE.exec(t);
+    if (m) {
+      speechSynthesis?.cancel?.();                          // barge-in: saying its name stops it
+      const rest = t.slice(m.index + m[0].length).trim();
+      if (rest) return hfAsk(rest);
+      wakePending = Date.now() + WAKE_WAIT_MS; hfShow('yes?', false); return;
+    }
+    if (wakePending > Date.now()) { wakePending = 0; return hfAsk(t); }
+    if (Date.now() < followUntil && t.split(/\s+/).length >= 2) return hfAsk(t);
+    // Not for Buddy. Stay quiet.
+    hfShow('say “Buddy…”', true);
+  }
+  async function hfAsk(text){
+    wakePending = 0; followUntil = 0;
+    hfPause();
+    await ask(text);
+    await speechDone;
+    followUntil = Date.now() + FOLLOW_MS;
+    hfResume();
+  }
+  if (SR) {
+    let saved = null; try { saved = localStorage.getItem('bb-handsfree'); } catch {}
+    hfBox.checked = saved === '1';
+    hfBox.onchange = () => {
+      try { localStorage.setItem('bb-handsfree', hfBox.checked ? '1' : '0'); } catch {}
+      if (hfBox.checked) { hfPaused = false; hfStart(); } else { hfPaused = true; const cur = hf; hf = null; try { cur?.stop(); } catch {} hfHide(); }
+    };
+  } else { hfBox.closest('label').hidden = true; }
+
   // ---------- boot ----------
   loadProject().then(() => {
     let saved = null; try { saved = localStorage.getItem('bb-cam'); } catch {}
-    startCam(saved || undefined);
+    startCam(saved || undefined).then(() => { if (hfBox.checked) hfStart(); });
   });
 })();
 </script>
