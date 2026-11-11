@@ -10,7 +10,8 @@ h1{color:var(--y);margin:0 0 8px}p{max-width:520px;line-height:1.5}a.btn{display
 <!-- App Store link placeholder: when the listing is live, add a link to it here. -->
 <p><small><a href="index.html" style="color:var(--y)">What is Bench + Build?</a></small></p>
 <script>
-  var deep = 'benchside://pair' + location.search;
+  // The name and code arrive after the "#", so they are never sent to this web server.
+  var deep = 'benchside://pair?' + (location.hash ? location.hash.slice(1) : location.search.slice(1));
   document.getElementById('open').href = deep;
   setTimeout(function(){ window.location.href = deep; }, 150);
   setTimeout(function(){ document.getElementById('msg').textContent = 'If Bench + Build did not open, it is not installed on this device yet.'; }, 2500);
