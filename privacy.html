@@ -27,7 +27,7 @@
 <tr><td><b>Roboflow</b><br>Optional “contribute”</td><td>Camera frames, tagged with the project name, uploaded to your own Roboflow workspace at api.roboflow.com.</td><td>Only if you add your own Roboflow API key and also turn on “contribute”.</td></tr>
 <tr><td><b>ElevenLabs</b><br>Optional voice</td><td>Each sentence the assistant speaks, as text, sent to api.elevenlabs.io to be turned into speech.</td><td>Only if you add your own ElevenLabs key.</td></tr>
 <tr><td><b>Hugging Face</b><br>Optional on-device voice</td><td>A one-time download of a voice model file (about 327 MB). Hugging Face sees your IP address, like any download. After that, speech is generated on your phone and nothing spoken is sent anywhere.</td><td>Only if you choose to download the natural voice.</td></tr>
-<tr><td><b>Apple</b></td><td>Speech audio, only when your device cannot recognize speech on the device (see “Microphone and speech”). Your payment, if you buy Pro. Your API keys, if iCloud Keychain sync is on.</td><td>When you speak to the app, buy Pro, or leave iCloud Keychain sync on.</td></tr>
+<tr><td><b>Apple</b></td><td>Speech audio, only when your device cannot recognize speech on the device (see “Microphone and speech”). Your payment, if you buy Pro.</td><td>When you speak to the app or buy Pro.</td></tr>
 <tr><td><b>Google (YouTube)</b></td><td>The search, and your IP address, like any visit to YouTube.</td><td>When a “Show me a video” answer opens YouTube search results in an in-app Safari view.</td></tr>
 <tr><td><b>Shimsky Labs</b></td><td>Your email address and whatever you write to us.</td><td>Only if you choose to email us.</td></tr>
 </table></div>
@@ -69,7 +69,7 @@
 <h2>Your keys</h2>
 <ul>
 <li>Bench + Build works with API keys from your own accounts: Anthropic, and optionally Roboflow and ElevenLabs.</li>
-<li>Keys are stored in the iOS Keychain on your phone. If you leave iCloud Keychain sync on, Apple syncs them to your other devices.</li>
+<li>Keys are stored in the iOS Keychain on this phone only. They are readable only while the phone is unlocked, they are not synced to iCloud Keychain, and they are not restored onto another device from a backup.</li>
 <li>Each key is sent only to the service it belongs to. For Roboflow, that is the endpoint you chose. We never receive your keys.</li>
 <li>You can remove your keys in Settings.</li>
 </ul>
