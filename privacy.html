@@ -11,7 +11,7 @@
 <h2>The short version</h2>
 <ul>
 <li><b>We do not collect your data.</b> Benchside has no accounts, no sign-in and no server run by us. It has no analytics, no advertising, no tracking and no third-party SDKs that collect data. The only thing we ever receive from you is email you choose to send us.</li>
-<li><b>AI answers use your own key.</b> When you ask a question, the app sends pictures and your question straight from your phone to Anthropic’s AI service, using your own Anthropic API key. It asks your permission once, before the first send.</li>
+<li><b>AI answers use your own key.</b> When you ask a question, the app sends pictures and your question straight from your phone to the AI service you chose (Anthropic, OpenAI or Google), using your own API key for it. It asks your permission before the first send, and again if you change to a different AI service.</li>
 <li><b>Everything else is optional.</b> Roboflow, ElevenLabs and the downloadable voice are used only if you set them up yourself.</li>
 <li><b>Your projects stay on your phone.</b> Notes, photos, clips and recap videos are kept on the phone, and you can delete them.</li>
 </ul>
@@ -20,9 +20,9 @@
 <p>Everything below goes directly from your phone to the company named. Nothing passes through us. Each company handles what it receives under its own terms and privacy policy.</p>
 <div class="scroll"><table>
 <tr><th>Who receives it</th><th>What is sent</th><th>When</th></tr>
-<tr><td><b>Anthropic</b><br>AI answers</td><td>Pictures from this phone’s camera and from any paired second camera. Pages of instruction booklets you added. Your question. The recent conversation. The project’s plan and running notes.</td><td>Each time you ask a question by typing, tapping or speaking to the assistant (called “Buddy” by default).</td></tr>
-<tr><td><b>Anthropic</b><br>Build plans</td><td>The photos, video frames and PDFs you provide for the plan.</td><td>When you ask the app to draft a build plan.</td></tr>
-<tr><td><b>Anthropic</b><br>Recap videos</td><td>Small copies of saved moments, with their questions and answers, so the AI can choose the shots.</td><td>When you ask for a recap video.</td></tr>
+<tr><td><b>The AI service you chose: Anthropic, OpenAI or Google</b><br>AI answers</td><td>Pictures from this phone’s camera and from any paired second camera. Pages of instruction booklets you added. Your question. The recent conversation. The project’s plan and running notes.</td><td>Each time you ask a question by typing, tapping or speaking to the assistant (called “Buddy” by default).</td></tr>
+<tr><td><b>The AI service you chose</b><br>Build plans</td><td>The photos, video frames and PDFs you provide for the plan.</td><td>When you ask the app to draft a build plan.</td></tr>
+<tr><td><b>The AI service you chose</b><br>Recap videos</td><td>Small copies of saved moments, with their questions and answers, so the AI can choose the shots.</td><td>When you ask for a recap video.</td></tr>
 <tr><td><b>Roboflow</b><br>Optional</td><td>Small camera frames, used to label and outline parts. They go to the Roboflow inference endpoint you choose. The default is Roboflow’s hosted API.</td><td>Only if you add your own Roboflow API key. While the camera is open and live labels are on, a small frame is sent every few seconds.</td></tr>
 <tr><td><b>Roboflow</b><br>Optional “contribute”</td><td>Camera frames, tagged with the project name, uploaded to your own Roboflow workspace at api.roboflow.com.</td><td>Only if you add your own Roboflow API key and also turn on “contribute”.</td></tr>
 <tr><td><b>ElevenLabs</b><br>Optional voice</td><td>Each sentence the assistant speaks, as text, sent to api.elevenlabs.io to be turned into speech.</td><td>Only if you add your own ElevenLabs key.</td></tr>
@@ -31,9 +31,9 @@
 <tr><td><b>Google (YouTube)</b></td><td>The search, and your IP address, like any visit to YouTube.</td><td>When a “Show me a video” answer opens YouTube search results in an in-app Safari view.</td></tr>
 <tr><td><b>Shimsky Labs</b></td><td>Your email address and whatever you write to us.</td><td>Only if you choose to email us.</td></tr>
 </table></div>
-<p>The AI questions are sent with your own Anthropic API key. You are Anthropic’s customer, and Anthropic handles that data under its own terms for API customers.</p>
+<p>The AI questions are sent with your own API key for the service you chose. You are that company’s customer, and it handles that data under its own terms for API customers.</p>
 <p>The first time anything would be sent to the AI service, Benchside shows a one-time notice and asks for your permission.</p>
-<p>Privacy policies of these companies: <a href="https://www.anthropic.com/legal/privacy">Anthropic</a>, <a href="https://roboflow.com/privacy">Roboflow</a>, <a href="https://elevenlabs.io/privacy">ElevenLabs</a>, <a href="https://www.apple.com/legal/privacy/">Apple</a>, <a href="https://huggingface.co/privacy">Hugging Face</a>, <a href="https://policies.google.com/privacy">Google (YouTube)</a>.</p>
+<p>Privacy policies of these companies: <a href="https://www.anthropic.com/legal/privacy">Anthropic</a>, <a href="https://openai.com/policies/privacy-policy">OpenAI</a>, <a href="https://policies.google.com/privacy">Google</a>, <a href="https://roboflow.com/privacy">Roboflow</a>, <a href="https://elevenlabs.io/privacy">ElevenLabs</a>, <a href="https://www.apple.com/legal/privacy/">Apple</a>, <a href="https://huggingface.co/privacy">Hugging Face</a>, <a href="https://policies.google.com/privacy">Google (YouTube)</a>.</p>
 
 <h2>What stays on your phone</h2>
 <p>These are kept on your phone only. We cannot see them.</p>
@@ -69,7 +69,7 @@
 
 <h2>Your keys</h2>
 <ul>
-<li>Benchside works with API keys from your own accounts: Anthropic, and optionally Roboflow and ElevenLabs.</li>
+<li>Benchside works with API keys from your own accounts: Anthropic, OpenAI or Google for the answers, and optionally Roboflow and ElevenLabs.</li>
 <li>Keys are stored in the iOS Keychain on this phone only. They are readable only while the phone is unlocked, they are not synced to iCloud Keychain, and they are not restored onto another device from a backup.</li>
 <li>Each key is sent only to the service it belongs to. For Roboflow, that is the endpoint you chose. We never receive your keys.</li>
 <li>You can remove your keys in Settings.</li>
@@ -96,7 +96,7 @@
 <li><b>On your phone,</b> things stay until you delete them. Deleting a project deletes its photos, clips, recap, instructions and saved questions and answers. You can also clear one project's history on its own, from the History screen or from Settings.</li>
 <li><b>Keys</b> are removed in Settings.</li>
 <li><b>Deleting the app</b> removes everything except Keychain items (your keys and the free-question count). Remove your keys in Settings first if you want them gone.</li>
-<li><b>Data held by Anthropic, Roboflow or ElevenLabs</b> is held under your own account with that company. To see or delete it, contact that company. Their privacy policies are linked above.</li>
+<li><b>Data held by the AI service you chose, Roboflow or ElevenLabs</b> is held under your own account with that company. To see or delete it, contact that company. Their privacy policies are linked above.</li>
 <li><b>Email you sent us</b> is the only thing we have. We use it to answer you.</li>
 </ul>
 
