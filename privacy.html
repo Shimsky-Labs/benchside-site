@@ -1,18 +1,107 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Benchside Privacy Policy</title>
-<style>body{margin:0 auto;max-width:720px;padding:32px 20px;font-family:-apple-system,system-ui,sans-serif;line-height:1.6;color:#1b1b1b}h1,h2{color:#0E332A}a{color:#0E332A}</style></head><body><h1>Benchside Privacy Policy</h1>
-<p><i>Last updated: 2026-11-10</i></p>
-<p>Benchside is a camera assistant for people building physical projects. This policy explains what the app does with your data.</p>
-<h2>What Benchside collects</h2>
-<p>Nothing. Benchside has no servers, no accounts and no analytics. The developer never receives your images, audio, questions or keys.</p>
-<h2>What leaves your phone, and where it goes</h2>
-<ul><li><b>Camera frames and your questions</b> are sent to Anthropic&#x27;s API (api.anthropic.com) using the API key you provide, only when you ask a question. Anthropic&#x27;s handling of that data is governed by Anthropic&#x27;s terms and privacy policy for API users.</li></ul><ul><li><b>If you enable Roboflow features</b>, small camera frames are sent to the Roboflow inference endpoint you choose (by default Roboflow&#x27;s hosted API) using the Roboflow API key you provide, and, if you turn on contribution, frames are uploaded to a Roboflow project in your own Roboflow account. Roboflow&#x27;s terms and privacy policy apply.</li></ul><ul><li><b>Nothing else.</b> No third-party SDKs, no advertising, no tracking.</li></ul>
+<style>body{margin:0 auto;max-width:720px;padding:32px 20px;font-family:-apple-system,system-ui,sans-serif;line-height:1.6;color:#1b1b1b}h1,h2{color:#0E332A}a{color:#0E332A}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.95em}th,td{border:1px solid #d5d9d7;padding:8px 10px;text-align:left;vertical-align:top}th{background:#eef3f1;color:#0E332A}</style></head><body><h1>Benchside Privacy Policy</h1>
+<p><i>Effective date: November 10, 2026</i></p>
+
+<h2>Who we are</h2>
+<p>Benchside is an iPhone app published by Shimsky Labs LLC, a company in the United States. In this policy, “we” and “us” mean Shimsky Labs LLC.</p>
+<p>Email: <a href="mailto:hello@shimskylabs.com">hello@shimskylabs.com</a><br>Postal address: [postal address]</p>
+<p>Benchside is a hands-free helper for building things at a bench. This policy explains what the app does with your information.</p>
+
+<h2>The short version</h2>
+<ul>
+<li><b>We do not collect your data.</b> Benchside has no accounts, no sign-in and no server run by us. It has no analytics, no advertising, no tracking and no third-party SDKs that collect data. The only thing we ever receive from you is email you choose to send us.</li>
+<li><b>AI answers use your own key.</b> When you ask a question, the app sends pictures and your question straight from your phone to Anthropic’s AI service, using your own Anthropic API key. It asks your permission once, before the first send.</li>
+<li><b>Everything else is optional.</b> Roboflow, ElevenLabs and the downloadable voice are used only if you set them up yourself.</li>
+<li><b>Your projects stay on your phone.</b> Notes, photos, clips and recap videos are kept on the phone, and you can delete them.</li>
+</ul>
+
+<h2>What leaves your phone, and who receives it</h2>
+<p>Everything below goes directly from your phone to the company named. Nothing passes through us. Each company handles what it receives under its own terms and privacy policy.</p>
+<div class="scroll"><table>
+<tr><th>Who receives it</th><th>What is sent</th><th>When</th></tr>
+<tr><td><b>Anthropic</b><br>AI answers</td><td>Pictures from this phone’s camera and from any paired second camera. Pages of instruction booklets you added. Your question. The recent conversation. The project’s plan and running notes.</td><td>Each time you ask a question by typing, tapping or speaking to the assistant (called “Buddy” by default).</td></tr>
+<tr><td><b>Anthropic</b><br>Build plans</td><td>The photos, video frames and PDFs you provide for the plan.</td><td>When you ask the app to draft a build plan.</td></tr>
+<tr><td><b>Anthropic</b><br>Recap videos</td><td>Small copies of saved moments, with their questions and answers, so the AI can choose the shots.</td><td>When you ask for a recap video.</td></tr>
+<tr><td><b>Anthropic</b><br>Brick set search</td><td>The name you typed.</td><td>If you search for a brick set by name.</td></tr>
+<tr><td><b>Roboflow</b><br>Optional</td><td>Small camera frames, used to label and outline parts. They go to the Roboflow inference endpoint you choose. The default is Roboflow’s hosted API.</td><td>Only if you add your own Roboflow API key. While the camera is open and live labels are on, a small frame is sent every few seconds.</td></tr>
+<tr><td><b>Roboflow</b><br>Optional “contribute”</td><td>Camera frames, tagged with the project name, uploaded to your own Roboflow workspace at api.roboflow.com.</td><td>Only if you add your own Roboflow API key and also turn on “contribute”.</td></tr>
+<tr><td><b>ElevenLabs</b><br>Optional voice</td><td>Each sentence the assistant speaks, as text, sent to api.elevenlabs.io to be turned into speech.</td><td>Only if you add your own ElevenLabs key.</td></tr>
+<tr><td><b>Hugging Face</b><br>Optional on-device voice</td><td>A one-time download of a voice model file (about 327 MB). Hugging Face sees your IP address, like any download. After that, speech is generated on your phone and nothing spoken is sent anywhere.</td><td>Only if you choose to download the natural voice.</td></tr>
+<tr><td><b>Apple</b></td><td>Speech audio, only when your device cannot recognize speech on the device (see “Microphone and speech”). Your payment, if you buy Pro. Your API keys, if iCloud Keychain sync is on.</td><td>When you speak to the app, buy Pro, or leave iCloud Keychain sync on.</td></tr>
+<tr><td><b>Google (YouTube)</b></td><td>The search, and your IP address, like any visit to YouTube.</td><td>When a “Show me a video” answer opens YouTube search results in an in-app Safari view.</td></tr>
+<tr><td><b>Shimsky Labs</b></td><td>Your email address and whatever you write to us.</td><td>Only if you choose to email us.</td></tr>
+</table></div>
+<p>The AI questions are sent with your own Anthropic API key. You are Anthropic’s customer, and Anthropic handles that data under its own terms for API customers.</p>
+<p>The first time anything would be sent to the AI service, Benchside shows a one-time notice and asks for your permission.</p>
+<p>Privacy policies of these companies: <a href="https://www.anthropic.com/legal/privacy">Anthropic</a>, <a href="https://roboflow.com/privacy">Roboflow</a>, <a href="https://elevenlabs.io/privacy">ElevenLabs</a>, <a href="https://www.apple.com/legal/privacy/">Apple</a>, <a href="https://huggingface.co/privacy">Hugging Face</a>, <a href="https://policies.google.com/privacy">Google (YouTube)</a>.</p>
+
+<h2>What stays on your phone</h2>
+<p>These are kept on your phone only. We cannot see them.</p>
+<ul>
+<li>Your projects and notes.</li>
+<li>While the camera is open: a photo of the bench about every 45 seconds, and a short silent clip of each question. These are for the build recap. A switch in Settings turns this off.</li>
+<li>Instruction PDFs you added.</li>
+<li>Recap videos the app has made, and videos you film for a recap.</li>
+<li>Your API keys, in the iOS Keychain.</li>
+<li>A count of the free questions you have used. It is in the iOS Keychain, so it is still there if you delete the app and install it again.</li>
+</ul>
+<p>If you back up your iPhone with iCloud Backup or to a computer, that backup can include Benchside’s files, as it does for other apps. Backups are handled by Apple and by you, not by us.</p>
+
+<h2>Second camera</h2>
+<p>You can pair another phone, or your own Mac, as a second camera by scanning a QR code. Its pictures are streamed over your own Wi-Fi, encrypted, to the paired phone only. They are included with the questions you send to the AI service.</p>
+
 <h2>Microphone and speech</h2>
-<p>Speech is recognized on your device using Apple&#x27;s speech framework when the device supports it. Only the text of a question you ask is sent to Anthropic. Audio is never recorded or uploaded.</p>
-<h2>Your API keys</h2>
-<p>Keys are stored in the iOS Keychain. If you enable iCloud Keychain sync in the app, Apple syncs them to your other devices using Apple&#x27;s encrypted keychain sync. Keys are sent only to the services they belong to.</p>
-<h2>Project data</h2>
-<p>Your projects, plans and running notes are stored on your device (and in your iCloud device backup if enabled). You can delete them in the app.</p>
+<ul>
+<li>Benchside uses Apple’s speech framework to turn what you say into text. This happens on your device when your device supports it. Otherwise Apple processes the audio.</li>
+<li>Benchside never stores or uploads the audio it hears.</li>
+<li>With hands-free on, the microphone listens while the Bench screen is open. Only what you say to the assistant, or shortly after an answer, is sent to the AI service, and it is sent as text.</li>
+<li>The short clips saved with each question are silent.</li>
+<li>Videos you film yourself for a recap can include sound. They stay on your phone.</li>
+</ul>
+
+<h2>Camera and bystanders</h2>
+<ul>
+<li>The camera sees whatever is in front of it, including people.</li>
+<li>When you ask a question, the pictures in view at that moment are sent to the AI service.</li>
+<li>Ask people before you point the camera at them.</li>
+</ul>
+
+<h2>Your keys</h2>
+<ul>
+<li>Benchside works with API keys from your own accounts: Anthropic, and optionally Roboflow and ElevenLabs.</li>
+<li>Keys are stored in the iOS Keychain on your phone. If you leave iCloud Keychain sync on, Apple syncs them to your other devices.</li>
+<li>Each key is sent only to the service it belongs to. For Roboflow, that is the endpoint you chose. We never receive your keys.</li>
+<li>You can remove your keys in Settings.</li>
+</ul>
+
+<h2>Purchases</h2>
+<p>Benchside offers a one-time “Pro” unlock through Apple’s In-App Purchase. Apple processes the payment. We get no card details.</p>
+
+<h2>Brick set helper</h2>
+<p>In the App Store version, you add your own instruction PDF. The app does not fetch instructions from any toy maker’s website. Pages of the booklet are sent with your questions, as described above. If you search for a set by name, that name is sent to the AI service.</p>
+<p>LEGO® is a trademark of the LEGO Group of companies which does not sponsor, authorize or endorse this app.</p>
+
+<h2>Recap videos and sharing</h2>
+<p>A recap video is saved to Photos only when you tap save. The “post to” buttons just open the other app. They do not post anything for you.</p>
+
 <h2>Children</h2>
-<p>Benchside is not directed at children under 13.</p>
+<p>Benchside is for adults and teens 13 and over. It is not directed to children under 13.</p>
+
+<h2>Retention and deletion</h2>
+<ul>
+<li><b>We hold nothing.</b> Because we hold no user data, we cannot access or delete anything on your behalf.</li>
+<li><b>On your phone,</b> things stay until you delete them. Deleting a project deletes its photos, clips, recap and instructions.</li>
+<li><b>Keys</b> are removed in Settings.</li>
+<li><b>Deleting the app</b> removes everything except Keychain items (your keys and the free-question count). Remove your keys in Settings first if you want them gone.</li>
+<li><b>Data held by Anthropic, Roboflow or ElevenLabs</b> is held under your own account with that company. To see or delete it, contact that company. Their privacy policies are linked above.</li>
+<li><b>Email you sent us</b> is the only thing we have. We use it to answer you.</li>
+</ul>
+
+<h2>Changes to this policy</h2>
+<p>If we change this policy, we will post the new version on this page and change the effective date.</p>
+
 <h2>Contact</h2>
-<p>Questions: hello@shimskylabs.com</p><p><a href="index.html">Benchside</a></p></body></html>
+<p>Questions: <a href="mailto:hello@shimskylabs.com">hello@shimskylabs.com</a></p>
+<p><i>Effective date: November 10, 2026</i></p>
+<p><a href="index.html">Benchside</a> · <a href="terms.html">Terms of Use</a></p></body></html>
